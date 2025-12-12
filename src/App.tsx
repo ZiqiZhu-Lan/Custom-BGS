@@ -1,25 +1,21 @@
 import React from 'react';
-import logo from './logo.svg';
+import { SoundProvider } from './contexts/SoundContext';
+import Mixer from './components/Mixer/Mixer';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <SoundProvider>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6">
+        <Mixer />
+        
+        {/* 简易页脚 */}
+        <footer className="mt-10 text-center text-gray-500 text-sm">
+          <p>🚀 简易混音器原型 | 开发时间: 1小时40分钟挑战</p>
+          <p className="mt-1">技术支持: React + Howler.js + Tailwind CSS | 状态管理: Context API</p>
+        </footer>
+      </div>
+    </SoundProvider>
   );
 }
 
