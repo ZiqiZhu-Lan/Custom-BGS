@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Howl } from 'howler';
-import { FaPlay, FaPause, FaVolumeUp } from 'react-icons/fa';
 import { useSoundContext, Sound } from '../../contexts/SoundContext';
 
 interface SoundPlayerProps {
@@ -85,11 +84,11 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({ sound }) => {
       >
         {sound.isPlaying ? (
           <>
-            <FaPause /> <span>暂停</span>
+            <span className="mr-2">⏸️</span> <span>暂停</span>
           </>
         ) : (
           <>
-            <FaPlay /> <span>播放</span>
+            <span className="mr-2">▶️</span> <span>播放</span>
           </>
         )}
       </button>
@@ -98,7 +97,7 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({ sound }) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-gray-700">
-            <FaVolumeUp />
+            <span className="mr-1">🔊</span>
             <span className="text-sm">音量</span>
           </div>
           <span className="font-medium">{Math.round(sound.volume * 100)}%</span>
