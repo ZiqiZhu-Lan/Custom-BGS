@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { Howl } from 'howler';
 import { Sound, AppState } from '../types';
 
@@ -76,52 +76,26 @@ export const useSoundStore = create<AppState>((set, get) => ({
 
   // 切换单个声音播放状态
   toggleSound: (soundId: number) => {
-    const { sounds, activeSoundId, isGlobalPlaying } = get();
-    
     set((state) => {
       const updatedSounds = state.sounds.map(sound => {
         if (sound.id === soundId) {
-          // 创建或获取Howler实例
-          let howl = sound.howl;
-          if (!howl && sound.audioUrl) {
-            howl = new Howl({
-              src: [sound.audioUrl],
-              volume: sound.volume / 100,
-              loop: true,
-              onload: () => console.log(`${sound.name} loaded`),
-              onloaderror: (id, error) => console.error('加载错误:', error)
-            });
-          }
-          
-          const shouldPlay = !(sound.id === activeSoundId && isGlobalPlaying);
-          
-          if (howl) {
-            if (shouldPlay) {
-              howl.volume(sound.volume / 100);
-              howl.play();
-            } else {
-              howl.stop();
-            }
-          }
-          
-          return { 
-            ...sound, 
-            howl, 
-            isPlaying: shouldPlay 
-          };
+          const isCurrentlyPlaying = sound.id === state.activeSoundId && state.isGlobalPlaying;
+          const shouldPlay = !isCurrentlyPlaying;
+          return { ...sound, isPlaying: shouldPlay };
         }
-        // 停止其他正在播放的声音
-        if (sound.howl && sound.isPlaying) {
-          sound.howl.stop();
+        if (sound.isPlaying) {
           return { ...sound, isPlaying: false };
         }
         return sound;
       });
       
+      const isAnyPlaying = updatedSounds.some(s => s.isPlaying);
+      const activeId = isAnyPlaying ? soundId : null;
+      
       return {
         sounds: updatedSounds,
-        activeSoundId: shouldPlay ? soundId : null,
-        isGlobalPlaying: shouldPlay,
+        activeSoundId: activeId,
+        isGlobalPlaying: isAnyPlaying,
       };
     });
   },

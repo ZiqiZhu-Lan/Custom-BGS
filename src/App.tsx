@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import './App.css';
 import { useSoundStore } from './stores/useSoundStore';
-import { FiPlay, FiPause, FiVolume2, FiVolumeX, FiRotateCcw, FiClock, FiMixer } from 'react-icons/fi';
-import { TbTrees, TbCoffee, TbWaveSine, TbWind, TbFire } from 'react-icons/tb';
+import { FiPlay, FiPause, FiVolume2, FiVolumeX, FiRotateCcw, FiClock, FiSliders } from 'react-icons/fi';
+import { TbTrees, TbCoffee, TbWaveSine, TbWind, TbFlame } from 'react-icons/tb';
 import { GiSoundWaves } from 'react-icons/gi';
 
 // 图标映射
@@ -11,7 +11,7 @@ const iconComponents: Record<string, React.ReactNode> = {
   '☕': <TbCoffee className="text-3xl text-amber-500" />,
   '🌊': <TbWaveSine className="text-3xl text-cyan-500" />,
   '📡': <GiSoundWaves className="text-3xl text-gray-500" />,
-  '🔥': <TbFire className="text-3xl text-orange-500" />,
+  '🔥': <TbFlame className="text-3xl text-orange-500" />,
   '💨': <TbWind className="text-3xl text-sky-500" />,
 };
 
@@ -107,7 +107,7 @@ function App() {
                 onClick={mixSounds}
                 className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium shadow-sm"
               >
-                <FiMixer />
+                <FiSliders />
                 <span className="font-medium">Barrejar</span>
               </button>
             </div>
@@ -205,7 +205,7 @@ function App() {
           {/* 全局控制面板 */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50 mb-8">
             <h3 className="text-2xl font-bold text-gray-800 mb-8 flex items-center">
-              <FiMixer className="mr-3 text-indigo-500" />
+              <FiSliders className="mr-3 text-indigo-500" />
               Control Global
             </h3>
             
