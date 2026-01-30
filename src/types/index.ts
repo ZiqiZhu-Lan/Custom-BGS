@@ -1,27 +1,30 @@
-// 声音类型定义
+// 文件路径: src/types/index.ts
+
+// 1. 定义单个声音的结构
 export interface Sound {
   id: number;
-  name: string; // 加泰罗尼亚语名称
-  name_cn?: string; // 中文名称（可选）
+  name: string;
+  name_cn?: string;
   category: string;
   icon: string;
-  color: string;
+  color?: string;
   volume: number;
-  audioUrl?: string; // 音频文件URL
-  isPlaying?: boolean;
-  howl?: any; // Howler实例
+  audioUrl: string; // 必填，不能有问号
+  isPlaying: boolean;
 }
 
-// 全局状态类型
+// 2. 导出预设类型
+export type PresetType = 'focus' | 'relax' | 'nature' | 'random';
+
+// 3. 定义 Store 的状态接口
 export interface AppState {
   sounds: Sound[];
   globalVolume: number;
   isGlobalPlaying: boolean;
   activeSoundId: number | null;
-  timerDuration: number; // 定时器时长（分钟）
+  timerDuration: number;
   isTimerActive: boolean;
-  
-  // Actions
+
   toggleSound: (soundId: number) => void;
   updateSoundVolume: (soundId: number, volume: number) => void;
   toggleGlobalPlay: () => void;
@@ -29,5 +32,8 @@ export interface AppState {
   resetAllVolumes: () => void;
   setTimerDuration: (minutes: number) => void;
   toggleTimer: () => void;
+  
+  // ★★★ 必须包含这两个方法，否则 App.tsx 会报错 ★★★
   mixSounds: () => void;
+  applyPreset: (type: PresetType) => void; 
 }

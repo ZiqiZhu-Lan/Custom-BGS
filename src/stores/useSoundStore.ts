@@ -1,69 +1,20 @@
-﻿import { create } from 'zustand';
-import { Howl } from 'howler';
-import { Sound, AppState } from '../types';
+﻿// 文件路径: src/stores/useSoundStore.ts
 
-// 初始声音数据
+import { create } from 'zustand';
+import { Howl } from 'howler';
+// 确保这里引入了 PresetType
+import { Sound, AppState, PresetType } from '../types'; 
+
+// 外部音频实例池
+const howlCache: Record<number, Howl> = {};
+
 const initialSounds: Sound[] = [
-  { 
-    id: 1, 
-    name: 'Pluja al bosc', 
-    name_cn: '森林雨声',
-    category: 'Naturalesa', 
-    icon: '🌧️', 
-    color: 'bg-blue-100', 
-    volume: 70,
-    audioUrl: '/sounds/rain.mp3'
-  },
-  { 
-    id: 2, 
-    name: 'Ambient de cafeteria', 
-    name_cn: '咖啡馆氛围',
-    category: 'Ambient', 
-    icon: '☕', 
-    color: 'bg-amber-100', 
-    volume: 60,
-    audioUrl: '/sounds/cafe.mp3'
-  },
-  { 
-    id: 3, 
-    name: 'Onades a la platja', 
-    name_cn: '海浪拍岸',
-    category: 'Naturalesa', 
-    icon: '🌊', 
-    color: 'bg-cyan-100', 
-    volume: 65,
-    audioUrl: '/sounds/waves.mp3'
-  },
-  { 
-    id: 4, 
-    name: 'Soroll blanc', 
-    name_cn: '白噪音',
-    category: 'Concentració', 
-    icon: '📡', 
-    color: 'bg-gray-100', 
-    volume: 50,
-    audioUrl: '/sounds/white-noise.mp3'
-  },
-  { 
-    id: 5, 
-    name: 'Foc cremant', 
-    name_cn: '篝火声',
-    category: 'Relaxació', 
-    icon: '🔥', 
-    color: 'bg-orange-100', 
-    volume: 55,
-    audioUrl: '/sounds/fire.mp3'
-  },
-  { 
-    id: 6, 
-    name: 'Vent suau', 
-    name_cn: '微风声',
-    category: 'Naturalesa', 
-    icon: '💨', 
-    color: 'bg-sky-100', 
-    volume: 45,
-    audioUrl: '/sounds/wind.mp3'
-  },
+  { id: 1, name: 'Pluja al bosc', name_cn: '森林雨声', category: 'Naturalesa', icon: '🌧️', color: 'bg-blue-100', volume: 70, audioUrl: '/sounds/rain.mp3', isPlaying: false },
+  { id: 2, name: 'Ambient de cafeteria', name_cn: '咖啡馆氛围', category: 'Ambient', icon: '☕', color: 'bg-amber-100', volume: 60, audioUrl: '/sounds/cafe.mp3', isPlaying: false },
+  { id: 3, name: 'Onades a la platja', name_cn: '海浪拍岸', category: 'Naturalesa', icon: '🌊', color: 'bg-cyan-100', volume: 65, audioUrl: '/sounds/waves.mp3', isPlaying: false },
+  { id: 4, name: 'Soroll blanc', name_cn: '白噪音', category: 'Concentració', icon: '📡', color: 'bg-gray-100', volume: 50, audioUrl: '/sounds/white-noise.mp3', isPlaying: false },
+  { id: 5, name: 'Foc cremant', name_cn: '篝火声', category: 'Relaxació', icon: '🔥', color: 'bg-orange-100', volume: 55, audioUrl: '/sounds/fire.mp3', isPlaying: false },
+  { id: 6, name: 'Vent suau', name_cn: '微风声', category: 'Naturalesa', icon: '💨', color: 'bg-sky-100', volume: 45, audioUrl: '/sounds/wind.mp3', isPlaying: false },
 ];
 
 export const useSoundStore = create<AppState>((set, get) => ({
@@ -71,43 +22,38 @@ export const useSoundStore = create<AppState>((set, get) => ({
   globalVolume: 65,
   isGlobalPlaying: false,
   activeSoundId: null,
-  timerDuration: 25, // 默认25分钟番茄钟
+  timerDuration: 25,
   isTimerActive: false,
 
-  // 切换单个声音播放状态
   toggleSound: (soundId: number) => {
+    const { globalVolume } = get();
     set((state) => {
       const updatedSounds = state.sounds.map(sound => {
         if (sound.id === soundId) {
-          const isCurrentlyPlaying = sound.id === state.activeSoundId && state.isGlobalPlaying;
-          const shouldPlay = !isCurrentlyPlaying;
-          return { ...sound, isPlaying: shouldPlay };
-        }
-        if (sound.isPlaying) {
-          return { ...sound, isPlaying: false };
+          const nextPlayingState = !sound.isPlaying;
+          if (sound.audioUrl) {
+            let howl = howlCache[soundId];
+            if (!howl) {
+              howl = new Howl({ src: [sound.audioUrl], html5: true, loop: true, volume: (sound.volume / 100) * (globalVolume / 100) });
+              howlCache[soundId] = howl;
+            }
+            if (nextPlayingState) { if (!howl.playing()) howl.play(); } else { howl.stop(); }
+          }
+          return { ...sound, isPlaying: nextPlayingState };
         }
         return sound;
       });
-      
       const isAnyPlaying = updatedSounds.some(s => s.isPlaying);
-      const activeId = isAnyPlaying ? soundId : null;
-      
-      return {
-        sounds: updatedSounds,
-        activeSoundId: activeId,
-        isGlobalPlaying: isAnyPlaying,
-      };
+      return { sounds: updatedSounds, isGlobalPlaying: isAnyPlaying };
     });
   },
 
-  // 更新单个声音音量
   updateSoundVolume: (soundId: number, volume: number) => {
+    const { globalVolume } = get();
     set((state) => ({
       sounds: state.sounds.map(sound => {
         if (sound.id === soundId) {
-          if (sound.howl) {
-            sound.howl.volume(volume / 100);
-          }
+          if (howlCache[soundId]) { howlCache[soundId].volume((volume / 100) * (globalVolume / 100)); }
           return { ...sound, volume };
         }
         return sound;
@@ -115,117 +61,88 @@ export const useSoundStore = create<AppState>((set, get) => ({
     }));
   },
 
-  // 切换全局播放
   toggleGlobalPlay: () => {
-    const { sounds, isGlobalPlaying, activeSoundId } = get();
-    
-    if (isGlobalPlaying && activeSoundId) {
-      // 停止当前播放
-      const sound = sounds.find(s => s.id === activeSoundId);
-      if (sound?.howl) {
-        sound.howl.stop();
-      }
-      set({ isGlobalPlaying: false, activeSoundId: null });
-    } else if (sounds.length > 0) {
-      // 播放第一个声音
-      const firstSound = sounds[0];
-      let howl = firstSound.howl;
-      if (!howl && firstSound.audioUrl) {
-        howl = new Howl({
-          src: [firstSound.audioUrl],
-          volume: firstSound.volume / 100,
-          loop: true
-        });
-      }
-      if (howl) {
-        howl.play();
-      }
-      set({ 
-        isGlobalPlaying: true, 
-        activeSoundId: firstSound.id,
-        sounds: sounds.map(sound => ({
-          ...sound,
-          isPlaying: sound.id === firstSound.id,
-          howl: sound.id === firstSound.id ? howl : sound.howl
-        }))
+    const { sounds, isGlobalPlaying, globalVolume } = get();
+    if (isGlobalPlaying) {
+      sounds.forEach(sound => { if (howlCache[sound.id]) howlCache[sound.id].stop(); });
+      set({ isGlobalPlaying: false, sounds: sounds.map(s => ({ ...s, isPlaying: false })) });
+    } else {
+      let hasStartedAny = false;
+      const updatedSounds = sounds.map(sound => {
+        if (sound.volume > 0 && sound.audioUrl) {
+          let howl = howlCache[sound.id];
+          if (!howl) {
+            howl = new Howl({ src: [sound.audioUrl], loop: true, volume: (sound.volume / 100) * (globalVolume / 100) });
+            howlCache[sound.id] = howl;
+          }
+          if (!howl.playing()) howl.play();
+          hasStartedAny = true;
+          return { ...sound, isPlaying: true };
+        }
+        return { ...sound, isPlaying: false };
       });
+      set({ isGlobalPlaying: hasStartedAny, sounds: updatedSounds });
     }
   },
 
-  // 更新全局音量
   updateGlobalVolume: (volume: number) => {
     const { sounds } = get();
-    const volumeMultiplier = volume / 100;
-    
-    sounds.forEach(sound => {
-      if (sound.howl) {
-        sound.howl.volume((sound.volume / 100) * volumeMultiplier);
-      }
-    });
-    
+    sounds.forEach(sound => { if (howlCache[sound.id]) { howlCache[sound.id].volume((sound.volume / 100) * (volume / 100)); } });
     set({ globalVolume: volume });
   },
 
-  // 重置所有音量
   resetAllVolumes: () => {
-    const { sounds } = get();
-    
-    sounds.forEach(sound => {
-      if (sound.howl && sound.isPlaying) {
-        sound.howl.stop();
-      }
-    });
-    
-    set({
-      sounds: initialSounds.map(s => ({ ...s, isPlaying: false, howl: undefined })),
-      globalVolume: 65,
-      isGlobalPlaying: false,
-      activeSoundId: null
-    });
+    Object.values(howlCache).forEach(howl => howl.stop());
+    set({ sounds: initialSounds.map(s => ({ ...s, isPlaying: false })), globalVolume: 65, isGlobalPlaying: false, activeSoundId: null });
   },
 
-  // 设置定时器时长
-  setTimerDuration: (minutes: number) => {
-    set({ timerDuration: minutes });
-  },
-
-  // 切换定时器状态
+  setTimerDuration: (minutes: number) => set({ timerDuration: minutes }),
+  
   toggleTimer: () => {
     const { isTimerActive, timerDuration } = get();
-    
     if (!isTimerActive) {
-      // 启动定时器
       setTimeout(() => {
         const state = get();
         if (state.isTimerActive) {
-          // 定时器结束时停止所有声音
-          state.sounds.forEach(sound => {
-            if (sound.howl && sound.isPlaying) {
-              sound.howl.stop();
-            }
-          });
-          set({ 
-            isGlobalPlaying: false, 
-            activeSoundId: null,
-            isTimerActive: false,
-            sounds: state.sounds.map(s => ({ ...s, isPlaying: false }))
-          });
-          alert(`⏰ Temporitzador de ${timerDuration} minuts acabat!`);
+          Object.values(howlCache).forEach(howl => howl.stop());
+          set({ isGlobalPlaying: false, isTimerActive: false, sounds: state.sounds.map(s => ({ ...s, isPlaying: false })) });
+          alert(`⏰ Temporitzador acabat!`);
         }
       }, timerDuration * 60 * 1000);
     }
-    
     set({ isTimerActive: !isTimerActive });
   },
 
-  // 混合声音（示例功能）
-  mixSounds: () => {
-    const { sounds } = get();
-    const mixedSounds = sounds.map(sound => ({
-      ...sound,
-      volume: Math.min(100, sound.volume + 10) // 每个声音增加10%音量
-    }));
-    
-    set({ sounds: mixedSounds });
+  // 实现 ApplyPreset 逻辑
+  applyPreset: (type: PresetType) => {
+    const { globalVolume } = get();
+    set((state) => {
+      const newSounds = state.sounds.map(s => {
+        let shouldPlay = false;
+        let targetVol = s.volume;
+        if (type === 'focus') { if (s.name_cn === '白噪音') { shouldPlay = true; targetVol = 60; } if (s.name_cn === '咖啡馆氛围') { shouldPlay = true; targetVol = 40; } }
+        else if (type === 'relax') { if (s.name_cn === '森林雨声') { shouldPlay = true; targetVol = 70; } if (s.name_cn === '篝火声') { shouldPlay = true; targetVol = 50; } }
+        else if (type === 'nature') { if (s.name_cn === '海浪拍岸') { shouldPlay = true; targetVol = 60; } if (s.name_cn === '微风声') { shouldPlay = true; targetVol = 50; } }
+        else if (type === 'random') { shouldPlay = Math.random() > 0.5; targetVol = shouldPlay ? Math.floor(Math.random() * 60 + 20) : s.volume; }
+        return { ...s, isPlaying: shouldPlay, volume: targetVol };
+      });
+
+      // 同步音频播放状态
+      newSounds.forEach(sound => {
+         if (sound.audioUrl) {
+            let howl = howlCache[sound.id];
+            if (!howl) {
+               howl = new Howl({ src: [sound.audioUrl], loop: true, volume: (sound.volume / 100) * (globalVolume / 100) });
+               howlCache[sound.id] = howl;
+            } else {
+               howl.volume((sound.volume / 100) * (globalVolume / 100));
+            }
+            if (sound.isPlaying) { if (!howl.playing()) howl.play(); } else { howl.stop(); }
+         }
+      });
+      return { sounds: newSounds, isGlobalPlaying: true };
+    });
   },
+
+  mixSounds: () => get().applyPreset('random'),
 }));

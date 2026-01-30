@@ -1,150 +1,167 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* 自定义基础样式 */
-@layer base {
-  body {
-    @apply antialiased;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
-  }
-
-  /* 自定义滚动条 */
-  ::-webkit-scrollbar {
-    @apply w-2.5;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100/50 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gradient-to-b from-indigo-500 to-emerald-500 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply from-indigo-600 to-emerald-600;
-  }
-
-  /* 选择文本样式 */
-  ::selection {
-    @apply bg-indigo-500/20 text-indigo-700;
-  }
+/* 修改你现有的 App.css */
+.page-wrapper {
+  min-height: 100vh;
+  background-color: #0a0a0a; /* 设为极深色 */
+  position: relative;
 }
 
-/* 自定义组件类 */
-@layer components {
-  .glass-effect {
-    @apply backdrop-blur-md bg-white/70 border border-white/20;
-  }
-
-  .gradient-text {
-    @apply bg-gradient-to-r from-indigo-600 to-emerald-600 bg-clip-text text-transparent;
-  }
-
-  .gradient-border {
-    border: double 2px transparent;
-    background-image: linear-gradient(white, white), 
-                      linear-gradient(to right, #4f46e5, #10b981);
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-  }
-
-  /* 按钮样式 */
-  .btn-primary {
-    @apply px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-emerald-500 text-white rounded-lg 
-           hover:shadow-lg transition-all duration-200 font-medium shadow-sm 
-           hover:from-indigo-600 hover:to-emerald-600 active:scale-95;
-  }
-
-  .btn-secondary {
-    @apply px-4 py-2 border border-gray-300 text-gray-700 rounded-lg 
-           hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 
-           transition-all duration-200 font-medium;
-  }
-
-  /* 卡片样式 */
-  .sound-card {
-    @apply rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 
-           border border-transparent backdrop-blur-sm;
-  }
-
-  .sound-card:hover {
-    @apply -translate-y-1;
-  }
-
-  /* 输入框样式 */
-  .range-slider {
-    @apply w-full h-2.5 bg-gray-300 rounded-full appearance-none cursor-pointer;
-  }
-
-  .range-slider::-webkit-slider-thumb {
-    @apply appearance-none h-6 w-6 rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 
-           border-2 border-white shadow-lg;
-  }
-
-  .range-slider::-moz-range-thumb {
-    @apply h-6 w-6 rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 
-           border-2 border-white shadow-lg;
-  }
+._c25881b2 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; /* 粒子在背景层 */
+    pointer-events: none;
 }
 
-/* 动画效果 */
-@layer utilities {
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-pulse-slow {
-    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient 15s ease infinite;
-  }
+/* 确保所有内容层背景透明，否则会遮住粒子 */
+.navbar, .global-control-panel, .sound-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px);
+    color: white;
+}
+/* 基础变量 */
+:root {
+  --primary-gradient: linear-gradient(to bottom right, #6366f1, #10b981);
+  --danger-gradient: linear-gradient(to bottom right, #ef4444, #f97316);
+  --indigo: #4f46e5;
+  --emerald: #10b981;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* 音量条动画 */
-.volume-bar {
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 播放按钮动画 */
-.play-button {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.play-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .sound-card {
-    @apply p-4;
-  }
+/* 布局容器 */
+.背景板 {
   
-  .control-panel {
-    @apply gap-4;
-  }
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, grey, #eff6ff);
+  font-family: sans-serif;
 }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.flex-center { display: flex; align-items: center; }
+
+/* 导航栏 */
+.navbar {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+}
+
+.logo-section { display: flex; align-items: center; gap: 0.75rem; }
+.logo-box {
+  width: 40px; height: 40px;
+  background: var(--primary-gradient);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: bold;
+}
+
+.brand-name { font-size: 1.5rem; color: #1f2937; margin: 0; }
+.brand-tagline { font-size: 0.75rem; color: #6b7280; margin: 0; }
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white; border: none; padding: 0.6rem 1.25rem;
+  border-radius: 8px; cursor: pointer; font-weight: 500;
+  transition: transform 0.2s;
+}
+.btn-primary:hover { transform: scale(1.02); opacity: 0.9; }
+
+/* 英雄区 */
+.hero-section { text-align: center; margin-bottom: 2.5rem; margin-top: 2rem; }
+.hero-title {
+  font-size: 3rem; font-weight: bold; margin-bottom: 1rem;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text; color: transparent;
+}
+
+/* 声音网格 */
+.sounds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.sound-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+}
+.sound-card.active {
+  border-color: var(--indigo);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.card-top { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+.card-info { display: flex; gap: 1rem; }
+.icon-wrapper {
+  padding: 0.75rem; background: white; border-radius: 12px;
+  font-size: 1.5rem;
+}
+
+.play-btn {
+  width: 48px; height: 48px; border-radius: 50%; border: none;
+  color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.play-btn.start { background: var(--primary-gradient); }
+.play-btn.stop { background: var(--danger-gradient); }
+
+/* 滑块样式 */
+.range-slider {
+  width: 100%; height: 8px; border-radius: 4px;
+  appearance: none; background: #d1d5db; cursor: pointer;
+}
+.range-slider::-webkit-slider-thumb {
+  appearance: none; width: 20px; height: 20px;
+  background: white; border: 2px solid var(--indigo);
+  border-radius: 50%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* 全局控制板 */
+.global-control-panel {
+  background: white; padding: 1.5rem; border-radius: 1.25rem;
+  border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.panel-content {
+  display: flex; flex-wrap: wrap; gap: 2rem; align-items: center;
+  justify-content: space-between;
+}
+
+.global-play-btn {
+  width: 80px; height: 80px; border-radius: 50%; border: none;
+  color: white; font-size: 1.5rem; cursor: pointer; transition: 0.3s;
+}
+.global-play-btn.start { background: var(--primary-gradient); }
+.global-play-btn.stop { background: var(--danger-gradient); }
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .nav-content { flex-direction: column; gap: 1rem; }
+  .panel-content { flex-direction: column; }
+}
+
+/* 图标颜色 */
+.icon-blue { color: #3b82f6; font-size: 1.8rem; }
+.icon-amber { color: #f59e0b; font-size: 1.8rem; }
+.icon-cyan { color: #06b6d4; font-size: 1.8rem; }
+/* ... 其他图标颜色同理 */
