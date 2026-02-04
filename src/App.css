@@ -1,0 +1,132 @@
+:root {
+  /* 提升基础亮度 */
+  --bg-dark: #111111; 
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --accent: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.4);
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+/* 锁定视口，禁止全局滚动 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; 
+  background-color: var(--bg-dark);
+  color: #fff;
+  font-family: -apple-system, "PingFang SC", sans-serif;
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+}
+
+/* 导航栏固定高度 */
+.navbar {
+  flex-shrink: 0;
+  height: 70px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 3rem;
+  background: rgba(17, 17, 17, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+/* 主内容区自适应并居中 */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem 4rem;
+  overflow: hidden; /* 防止溢出 */
+  z-index: 5;
+}
+
+.hero-header {
+  margin-bottom: 3rem;
+}
+
+.hero-header h1 {
+  font-size: 2.8rem;
+  font-weight: 200;
+  letter-spacing: 0.2rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* 声音网格：内部滚动逻辑 */
+.sounds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  overflow-y: auto; /* 仅网格内部可滚动 */
+  padding-right: 10px;
+}
+
+/* 卡片样式：提升亮度与交互感 */
+.sound-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sound-card:hover, .sound-card.active {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--accent);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15); /* 提高滑条可见度 */
+  outline: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* 底部面板：固定高度，不遮挡内容 */
+.global-control-panel {
+  flex-shrink: 0;
+  height: 100px;
+  background: #0a0a0a;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4rem;
+  z-index: 10;
+}
+
+.panel-inner {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#webgl { opacity: 0.25; } /* 提升粒子明度 */
+
+/* 新增：强制下拉菜单选项为深色模式 */
+select option {
+  background-color: #111;
+  color: #fff;
+}
