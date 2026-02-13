@@ -1,132 +1,182 @@
+/* --- 1. 变量与基础重置 --- */
 :root {
-  /* 提升基础亮度 */
-  --bg-dark: #111111; 
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --accent: #ffffff;
-  --text-dim: rgba(255, 255, 255, 0.4);
+  --bg-dark: #0a0a0a;
+  --glass: rgba(255, 255, 255, 0.03);
   --border: rgba(255, 255, 255, 0.1);
+  --accent: #34d399; /* 激活时的绿色 */
+  --panel-height: 100px;
 }
 
-/* 锁定视口，禁止全局滚动 */
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  overflow: hidden; 
+  /* 必须设置为 auto 以允许内容超出时产生滚动条 */
+  height: auto; 
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto; 
   background-color: var(--bg-dark);
-  color: #fff;
-  font-family: -apple-system, "PingFang SC", sans-serif;
+  color: white;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  scroll-behavior: smooth;
 }
 
+/* --- 2. 布局容器 --- */
 .page-wrapper {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  /* 重要：预留出底部固定面板的高度，防止内容被遮挡 */
+  padding-bottom: var(--panel-height); 
+}
+
+/* 粒子背景 - 始终铺满窗口 */
+#webgl {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* --- 3. 导航与悬浮组件 --- */
+.navbar {
+  height: 70px;
+  padding: 0 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  z-index: 100;
   position: relative;
 }
 
-/* 导航栏固定高度 */
-.navbar {
-  flex-shrink: 0;
-  height: 70px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 3rem;
-  background: rgba(17, 17, 17, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 10;
+.logo { font-weight: 200; letter-spacing: 0.4rem; opacity: 0.6; }
+
+.floating-status-box {
+  position: fixed;
+  top: 100px;
+  left: 20px;
+  z-index: 90;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  min-width: 160px;
 }
 
-/* 主内容区自适应并居中 */
+/* --- 4. 主内容区与网格 --- */
 .main-content {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex: 1;
   padding: 2rem 4rem;
-  overflow: hidden; /* 防止溢出 */
-  z-index: 5;
-}
-
-.hero-header {
-  margin-bottom: 3rem;
+  z-index: 10;
+  position: relative;
 }
 
 .hero-header h1 {
-  font-size: 2.8rem;
+  font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 200;
-  letter-spacing: 0.2rem;
-  margin: 0;
-  opacity: 0.9;
+  margin-bottom: 3rem;
+  line-height: 1.2;
 }
 
-/* 声音网格：内部滚动逻辑 */
 .sounds-grid {
   display: grid;
+  /* 自动填充网格，最小 280px */
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
-  overflow-y: auto; /* 仅网格内部可滚动 */
-  padding-right: 10px;
+  margin-top: 1rem;
 }
 
-/* 卡片样式：提升亮度与交互感 */
+/* 音频卡片 */
 .sound-card {
-  background: var(--card-bg);
+  background: var(--glass);
   border: 1px solid var(--border);
   padding: 2rem;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.sound-card:hover, .sound-card.active {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: var(--accent);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.05);
-}
+.sound-card:hover { background: rgba(255, 255, 255, 0.06); }
+.sound-card.active { border-color: var(--accent); background: rgba(52, 211, 153, 0.05); }
 
-.range-slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.15); /* 提高滑条可见度 */
-  outline: none;
-}
-
-.range-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  background: #fff;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-/* 底部面板：固定高度，不遮挡内容 */
+/* --- 5. 固定底部控制面板 --- */
 .global-control-panel {
-  flex-shrink: 0;
-  height: 100px;
-  background: #0a0a0a;
+  position: fixed; /* 必须是 fixed 才能在窗口缩小时始终吸底 */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--panel-height);
+  background: rgba(5, 5, 5, 0.9);
+  backdrop-filter: blur(30px);
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4rem;
-  z-index: 10;
+  z-index: 1000;
 }
 
 .panel-inner {
   width: 100%;
   max-width: 1200px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  padding: 0 3rem;
 }
 
-#webgl { opacity: 0.25; } /* 提升粒子明度 */
+/* --- 6. 交互组件 (滑块、弹窗) --- */
+.range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+  cursor: pointer;
+}
 
-/* 新增：强制下拉菜单选项为深色模式 */
-select option {
-  background-color: #111;
-  color: #fff;
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* --- 7. 响应式优化 --- */
+@media (max-width: 768px) {
+  .main-content { padding: 2rem; }
+  .navbar { padding: 0 1.5rem; }
+  
+  /* 窗口变小时，底部面板改为垂直排布，防止挤压 */
+  .global-control-panel {
+    height: auto;
+    padding: 1.5rem 0;
+  }
+  .panel-inner {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  /* 增加页面底部的间距以适应变高的面板 */
+  .page-wrapper { padding-bottom: 200px; }
 }
