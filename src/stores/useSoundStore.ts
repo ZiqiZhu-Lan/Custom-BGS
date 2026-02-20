@@ -1,93 +1,186 @@
-﻿import { create } from 'zustand';
-import { Howl } from 'howler';
-import { AppState, Sound } from '../types';
+﻿// 文件路径: src/stores/useSoundStore.ts
 
-// ✅ 只导入目前存在的这一个文件
-import rainOnGrassFile from '../sounds/rain-on-grasst.wav';
+import { create } from 'zustand';
+import { Howl } from 'howler';
+import SHA256 from 'crypto-js/sha256';
+
+// 引入音频文件
+import rainFile from '../sounds/rain-on-grasst.mp3'; 
+import wavesFile from '../sounds/waves.mp3';
+import fireFile from '../sounds/bonfire.mp3';
+import windFile from '../sounds/wind.mp3';
+import birdFile from '../sounds/bird.mp3'; // ✅ 引入鸟鸣音频
+
+// 引入本地背景图片
+import rainBg from '../assets/images/rain-on-grasst.png'; 
+import wavesBg from '../assets/images/waves.png';
+import fireBg from '../assets/images/bonfire.png';
+import windBg from '../assets/images/wind.png';
+import birdBg from '../assets/images/bird.png'; // ✅ 引入鸟鸣图片
+
+export interface SoundState { id: number; volume: number; isPlaying: boolean; }
+export interface UserPreferences { globalVolume: number; timerDuration: number; soundStates: SoundState[]; lastActiveIds: number[]; }
+export interface Sound extends SoundState { name: string; name_cn: string; category: string; icon: string; audioUrl: string; backgroundImageUrl?: string; }
+export interface User { id: string; username: string; password?: string; preferences?: UserPreferences; }
+
+export interface AppState {
+  sounds: Sound[]; globalVolume: number; isGlobalPlaying: boolean; 
+  timerDuration: number; timerPreset: number;
+  isTimerActive: boolean; user: User | null; isLoggedIn: boolean; isLoginModalOpen: boolean; lastActiveIds: number[];
+  _savePreferences: () => void; tick: () => void; toggleSound: (id: number) => void;
+  updateSoundVolume: (id: number, vol: number) => void; toggleGlobalPlay: () => void; updateGlobalVolume: (vol: number) => void;
+  setTimerDuration: (m: number) => void; toggleTimer: () => void;
+  login: (u: string, p: string) => boolean; register: (u: string, p: string) => boolean;
+  logout: () => void; toggleLoginModal: (isOpen?: boolean) => void;
+  resetAllVolumes: () => void; applyPreset: (type: string) => void; mixSounds: () => void; rehydrateAudio: () => void;
+}
 
 const howlCache: Record<number, Howl> = {};
+const STORAGE_KEY_USERS = 'silence_users_db', STORAGE_KEY_CURRENT = 'silence_curr_user';
 
-const mockSounds: Sound[] = [
-  { id: 1, name: 'Rain on Grass', name_cn: '草地雨声', category: 'nature', icon: '🌿', volume: 70, audioUrl: rainOnGrassFile, isPlaying: false },
-  // 以下标签保留，但先不导入文件，audioUrl 暂时设为空，防止编译报错
-  { id: 2, name: 'Coffee Shop', name_cn: '午后咖啡馆', category: 'urban', icon: '☕', volume: 40, audioUrl: '', isPlaying: false },
-  { id: 3, name: 'Ocean Waves', name_cn: '冥想海浪', category: 'nature', icon: '🌊', volume: 60, audioUrl: '', isPlaying: false },
-  { id: 4, name: 'White Noise', name_cn: '深度白噪音', category: 'focus', icon: '📡', volume: 70, audioUrl: '', isPlaying: false },
-  { id: 5, name: 'Campfire', name_cn: '冬日篝火', category: 'nature', icon: '🔥', volume: 50, audioUrl: '', isPlaying: false },
-  { id: 6, name: 'Mountain Wind', name_cn: '山谷微风', category: 'nature', icon: '💨', volume: 45, audioUrl: '', isPlaying: false },
+// ✅ 更新配置：移除咖啡和白噪音，添加鸟鸣
+const DEFAULT_SOUNDS_CONFIG: Omit<Sound, 'isPlaying' | 'volume'>[] = [
+  { id: 1, name: 'Rain', name_cn: '草地雨声', category: 'nature', icon: '🌿', audioUrl: rainFile, backgroundImageUrl: rainBg },
+  { id: 3, name: 'Waves', name_cn: '冥想海浪', category: 'nature', icon: '🌊', audioUrl: wavesFile, backgroundImageUrl: wavesBg },
+  { id: 5, name: 'Fire', name_cn: '冬日篝火', category: 'nature', icon: '🔥', audioUrl: fireFile, backgroundImageUrl: fireBg },
+  { id: 6, name: 'Wind', name_cn: '山谷微风', category: 'nature', icon: '💨', audioUrl: windFile, backgroundImageUrl: windBg },
+  { id: 7, name: 'Birds', name_cn: '晨间鸟鸣', category: 'nature', icon: '🕊️', audioUrl: birdFile, backgroundImageUrl: birdBg },
 ];
 
-export const useSoundStore = create<AppState>((set, get) => ({
-  sounds: mockSounds,
-  globalVolume: 80,
-  isGlobalPlaying: false,
-  timerDuration: 15,
-  isTimerActive: false,
-  user: null,
-  isLoggedIn: false,
-  isLoginModalOpen: false,
+const getInitialSounds = (): Sound[] => DEFAULT_SOUNDS_CONFIG.map((s: any) => ({ ...s, volume: 50, isPlaying: false }));
+const hashPwd = (p: string) => SHA256(p).toString();
+const safeParse = (key: string, fb: any) => { try { return JSON.parse(localStorage.getItem(key)!) || fb; } catch { return fb; } };
 
-  toggleSound: (id) => {
-    const sound = get().sounds.find(s => s.id === id);
-    if (!sound || !sound.audioUrl) {
-        alert("该音频文件尚未添加，请先保留草地雨声测试。");
-        return;
-    }
+const initHowl = (id: number, url: string, vol: number, gVol: number) => {
+  if (!howlCache[id]) howlCache[id] = new Howl({ src: [url], html5: true, loop: true, volume: (vol / 100) * (gVol / 100) });
+  return howlCache[id];
+};
 
-    const { globalVolume } = get();
-    set((state) => {
-      const updatedSounds = state.sounds.map(s => {
-        if (s.id === id) {
-          const nextState = !s.isPlaying;
-          let howl = howlCache[id];
-          if (!howl) {
-            howl = new Howl({
-              src: [s.audioUrl],
-              html5: true,
-              loop: true,
-              volume: (s.volume / 100) * (globalVolume / 100),
-            });
-            howlCache[id] = howl;
-          }
-          nextState ? howl.play() : howl.stop();
-          return { ...s, isPlaying: nextState };
-        }
-        return s;
-      });
-      return { sounds: updatedSounds, isGlobalPlaying: updatedSounds.some(s => s.isPlaying) };
+const restoreState = () => {
+  const user: User | null = safeParse(STORAGE_KEY_CURRENT, null);
+  if (user?.preferences) {
+    const { globalVolume, timerDuration, soundStates, lastActiveIds } = user.preferences;
+    const restoredSounds = DEFAULT_SOUNDS_CONFIG.map((def: any) => {
+      const saved = soundStates.find((s: SoundState) => s.id === def.id);
+      return saved ? { ...def, volume: saved.volume, isPlaying: saved.isPlaying } : { ...def, volume: 50, isPlaying: false };
     });
-  },
+    return { user, isLoggedIn: true, globalVolume, timerDuration: timerDuration || 15, timerPreset: timerDuration || 15, sounds: restoredSounds, isGlobalPlaying: restoredSounds.some((s: Sound) => s.isPlaying), lastActiveIds: lastActiveIds || [] };
+  }
+  return { user, isLoggedIn: !!user, globalVolume: 80, timerDuration: 15, timerPreset: 15, sounds: getInitialSounds(), isGlobalPlaying: false, lastActiveIds: [] };
+};
 
-  updateSoundVolume: (id, vol) => {
-    const { globalVolume } = get();
-    if (howlCache[id]) howlCache[id].volume((vol / 100) * (globalVolume / 100));
-    set((state) => ({ sounds: state.sounds.map(s => s.id === id ? { ...s, volume: vol } : s) }));
+export const useSoundStore = create<AppState>((set, get) => ({
+  ...restoreState(), isTimerActive: false, isLoginModalOpen: false,
+
+  _savePreferences: () => {
+    const { user, sounds, globalVolume, timerPreset, isLoggedIn, lastActiveIds } = get();
+    if (!isLoggedIn || !user) return;
+    const prefs: UserPreferences = { globalVolume, timerDuration: timerPreset, soundStates: sounds.map((s: Sound) => ({ id: s.id, volume: s.volume, isPlaying: s.isPlaying })), lastActiveIds };
+    const updatedUser = { ...user, preferences: prefs };
+    const users: User[] = safeParse(STORAGE_KEY_USERS, []);
+    const idx = users.findIndex((u: User) => u.username === user.username);
+    if (idx !== -1) {
+      users[idx] = updatedUser;
+      localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+      localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(updatedUser));
+    }
   },
+  tick: () => {
+    const { timerDuration, isTimerActive, sounds } = get();
+    if (!isTimerActive) return;
+    const next = timerDuration - (1 / 60);
+    if (next <= 0) {
+      Object.values(howlCache).forEach((h: Howl) => h.stop());
+      set({ timerDuration: 0, isTimerActive: false, isGlobalPlaying: false, sounds: sounds.map((s: Sound) => ({ ...s, isPlaying: false })) });
+    } else set({ timerDuration: next });
+  },
+  rehydrateAudio: () => {
+    const { sounds, globalVolume } = get();
+    sounds.forEach((s: Sound) => { if (s.isPlaying && s.audioUrl) { const h = initHowl(s.id, s.audioUrl, s.volume, globalVolume); if (!h.playing()) h.play(); } });
+  },
+  toggleSound: (id) => {
+    const sound = get().sounds.find((s: Sound) => s.id === id);
+    if (!sound || !sound.audioUrl) return;
+    const gVol = get().globalVolume;
+    set(state => {
+      const updated = state.sounds.map((snd: Sound) => {
+        if (snd.id === id) {
+          const isPlay = !snd.isPlaying;
+          const h = initHowl(id, snd.audioUrl, snd.volume, gVol);
+          isPlay ? h.play() : h.stop();
+          return { ...snd, isPlaying: isPlay };
+        }
+        return snd;
+      });
+      return { sounds: updated, isGlobalPlaying: updated.some((snd: Sound) => snd.isPlaying) };
+    });
+    get()._savePreferences();
+  },
+  updateSoundVolume: (id, vol) => {
+    const gVol = get().globalVolume;
+    if (howlCache[id]) howlCache[id].volume((vol / 100) * (gVol / 100));
+    set(state => ({ sounds: state.sounds.map((s: Sound) => s.id === id ? { ...s, volume: vol } : s) }));
+    get()._savePreferences();
+  },
+  updateGlobalVolume: (vol) => {
+    set({ globalVolume: vol });
+    get().sounds.forEach((s: Sound) => { if (howlCache[s.id]) howlCache[s.id].volume((s.volume / 100) * (vol / 100)); });
+    get()._savePreferences();
+  },
+  setTimerDuration: (m) => { set({ timerDuration: m, timerPreset: m }); get()._savePreferences(); },
+  
+  toggleTimer: () => set(state => ({ 
+    isTimerActive: !state.isTimerActive,
+    timerDuration: (!state.isTimerActive && state.timerDuration <= 0) ? state.timerPreset : state.timerDuration
+  })),
 
   toggleGlobalPlay: () => {
-    const { isGlobalPlaying, sounds } = get();
+    const { isGlobalPlaying, sounds, lastActiveIds } = get();
     if (isGlobalPlaying) {
-      Object.values(howlCache).forEach(h => h.stop());
-      set({ isGlobalPlaying: false, sounds: sounds.map(s => ({ ...s, isPlaying: false })) });
+      const curr = sounds.filter((s: Sound) => s.isPlaying).map((s: Sound) => s.id);
+      Object.values(howlCache).forEach((h: Howl) => h.stop());
+      set({ isGlobalPlaying: false, isTimerActive: false, sounds: sounds.map((s: Sound) => ({ ...s, isPlaying: false })), lastActiveIds: curr.length ? curr : lastActiveIds });
     } else {
-      get().toggleSound(1); // 默认开启存在的雨声
+      const idsToPlay = (!lastActiveIds || !lastActiveIds.length) ? [1] : lastActiveIds;
+      set({ isGlobalPlaying: true, sounds: sounds.map((s: Sound) => idsToPlay.includes(s.id) ? { ...s, isPlaying: true } : s) });
+      get().rehydrateAudio();
     }
+    get()._savePreferences();
   },
-
-  updateGlobalVolume: (vol) => {
-    const { sounds } = get();
-    set({ globalVolume: vol });
-    sounds.forEach(s => {
-      if (howlCache[s.id]) howlCache[s.id].volume((s.volume / 100) * (vol / 100));
-    });
+  login: (u, p) => {
+    if (!p) return false;
+    const found = safeParse(STORAGE_KEY_USERS, []).find((user: User) => user.username === u && user.password === hashPwd(p));
+    if (found) {
+      if (found.preferences) {
+        const { globalVolume, timerDuration, soundStates, lastActiveIds } = found.preferences;
+        const restored = DEFAULT_SOUNDS_CONFIG.map((def: any) => {
+            const saved = soundStates.find((s: SoundState) => s.id === def.id);
+            return saved ? { ...def, volume: saved.volume, isPlaying: saved.isPlaying } : { ...def, volume: 50, isPlaying: false };
+        });
+        set({ user: found, isLoggedIn: true, isLoginModalOpen: false, globalVolume, timerDuration: timerDuration || 15, timerPreset: timerDuration || 15, sounds: restored, isGlobalPlaying: restored.some((s: Sound) => s.isPlaying), lastActiveIds: lastActiveIds || [] });
+        get().rehydrateAudio();
+      } else set({ user: found, isLoggedIn: true, isLoginModalOpen: false });
+      localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(found));
+      return true;
+    }
+    return false;
   },
-
-  setTimerDuration: (m) => set({ timerDuration: m }),
-  toggleTimer: () => set((state) => ({ isTimerActive: !state.isTimerActive })),
-  login: (username) => set({ user: { id: '1', username }, isLoggedIn: true, isLoginModalOpen: false }),
-  logout: () => set({ user: null, isLoggedIn: false }),
-  toggleLoginModal: (isOpen) => set({ isLoginModalOpen: isOpen ?? !get().isLoginModalOpen }),
-  resetAllVolumes: () => {},
-  applyPreset: () => {},
-  mixSounds: () => {}
+  register: (u, p) => {
+    if (!p) return false;
+    const users: User[] = safeParse(STORAGE_KEY_USERS, []);
+    if (users.some((user: User) => user.username === u)) return false;
+    const newUser: User = { id: Date.now().toString(), username: u, password: hashPwd(p) };
+    users.push(newUser);
+    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+    localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(newUser));
+    set({ user: newUser, isLoggedIn: true, isLoginModalOpen: false, lastActiveIds: [], timerDuration: 15, timerPreset: 15 });
+    return true;
+  },
+  logout: () => {
+    Object.values(howlCache).forEach((h: Howl) => h.stop());
+    localStorage.removeItem(STORAGE_KEY_CURRENT);
+    set({ user: null, isLoggedIn: false, sounds: getInitialSounds(), globalVolume: 80, isGlobalPlaying: false, timerDuration: 15, timerPreset: 15, isTimerActive: false, lastActiveIds: [] });
+  },
+  toggleLoginModal: (open) => set(s => ({ isLoginModalOpen: open ?? !s.isLoginModalOpen })),
+  resetAllVolumes: () => {}, applyPreset: () => {}, mixSounds: () => {}
 }));

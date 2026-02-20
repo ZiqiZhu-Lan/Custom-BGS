@@ -1,182 +1,242 @@
-/* --- 1. 变量与基础重置 --- */
+/* =========================================
+   1. 全局变量与基础设置
+   ========================================= */
 :root {
   --bg-dark: #0a0a0a;
-  --glass: rgba(255, 255, 255, 0.03);
-  --border: rgba(255, 255, 255, 0.1);
-  --accent: #34d399; /* 激活时的绿色 */
-  --panel-height: 100px;
+  --glass: rgba(255, 255, 255, 0.02);
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #ffffff; /* 统一采用白色作为强调色 */
+  --text-dim: rgba(255, 255, 255, 0.45);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; outline: none; }
 
 html, body {
-  margin: 0;
-  padding: 0;
-  /* 必须设置为 auto 以允许内容超出时产生滚动条 */
-  height: auto; 
-  min-height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto; 
+  margin: 0; padding: 0; width: 100%; height: auto; min-height: 100%;
   background-color: var(--bg-dark);
   color: white;
-  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-  scroll-behavior: smooth;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow-x: hidden; overflow-y: auto !important;
+  -webkit-font-smoothing: antialiased; /* 让字体渲染更平滑高级 */
 }
 
-/* --- 2. 布局容器 --- */
-.page-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  position: relative;
-  /* 重要：预留出底部固定面板的高度，防止内容被遮挡 */
-  padding-bottom: var(--panel-height); 
-}
+/* =========================================
+   2. 布局容器
+   ========================================= */
+.page-wrapper { display: flex; flex-direction: column; min-height: 100vh; position: relative; padding-bottom: 120px; }
+#webgl { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
 
-/* 粒子背景 - 始终铺满窗口 */
-#webgl {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* --- 3. 导航与悬浮组件 --- */
+/* =========================================
+   3. 顶部导航栏
+   ========================================= */
 .navbar {
-  height: 70px;
-  padding: 0 3rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-  z-index: 100;
-  position: relative;
+  height: 80px; padding: 0 4vw; display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); z-index: 100; position: relative;
 }
 
-.logo { font-weight: 200; letter-spacing: 0.4rem; opacity: 0.6; }
+.logo { font-weight: 300; letter-spacing: 0.5rem; opacity: 0.85; font-size: 1.1rem; }
 
-.floating-status-box {
-  position: fixed;
-  top: 100px;
-  left: 20px;
-  z-index: 90;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(15px);
-  padding: 15px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  min-width: 160px;
+.user-profile { display: flex; align-items: center; gap: 15px; font-size: 0.95rem; font-weight: 300; }
+
+.btn-login {
+  background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: white;
+  padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.3s ease;
 }
+.btn-login:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.5); transform: translateY(-1px); }
 
-/* --- 4. 主内容区与网格 --- */
+.btn-icon { background: none; border: none; color: rgba(255, 255, 255, 0.5); cursor: pointer; display: flex; align-items: center; transition: color 0.3s; }
+.btn-icon:hover { color: white; }
+
+/* =========================================
+   4. 主内容区 & 标题
+   ========================================= */
 .main-content {
-  flex: 1;
-  padding: 2rem 4rem;
-  z-index: 10;
-  position: relative;
+  position: relative; flex: 1; padding: 4rem 4vw; z-index: 10;
+  max-width: 1400px; margin: 0 auto; width: 100%; /* 限制超大屏幕的最大宽度，排版更紧凑 */
 }
 
-.hero-header h1 {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 200;
-  margin-bottom: 3rem;
-  line-height: 1.2;
-}
+.hero-header { text-align: center; margin-bottom: 4.5rem; }
+.hero-header h1 { font-size: 3.2rem; font-weight: 300; margin: 0 0 1rem 0; letter-spacing: 2px; }
+.hero-subtitle { color: var(--text-dim); font-size: 1.1rem; font-weight: 300; letter-spacing: 1px; margin: 0; }
 
-.sounds-grid {
-  display: grid;
-  /* 自动填充网格，最小 280px */
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-top: 1rem;
-}
+/* =========================================
+   5. 声音卡片网格 (核心美化区)
+   ========================================= */
+.sounds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2.5rem; }
 
-/* 音频卡片 */
 .sound-card {
-  background: var(--glass);
+  background-color: var(--glass);
   border: 1px solid var(--border);
-  padding: 2rem;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+  display: flex; flex-direction: column; gap: 2rem;
+  /* ✅ 新增：背景图相关设置 */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.sound-card:hover { background: rgba(255, 255, 255, 0.06); }
-.sound-card.active { border-color: var(--accent); background: rgba(52, 211, 153, 0.05); }
-
-/* --- 5. 固定底部控制面板 --- */
-.global-control-panel {
-  position: fixed; /* 必须是 fixed 才能在窗口缩小时始终吸底 */
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: var(--panel-height);
-  background: rgba(5, 5, 5, 0.9);
-  backdrop-filter: blur(30px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+/* ✅ 新增：背景遮罩层，确保文字清晰可见 */
+.sound-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+  border-radius: 20px;
 }
 
-.panel-inner {
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 3rem;
+/* 确保卡片内容在遮罩层之上 */
+.sound-card > * {
+  position: relative;
+  z-index: 2;
 }
 
-/* --- 6. 交互组件 (滑块、弹窗) --- */
-.range-slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  outline: none;
-  cursor: pointer;
+.sound-card:hover {
+  transform: translateY(-6px);
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
+/* ✅ 修改：激活状态下的样式 */
+.sound-card.active {
+  /* 移除原来的背景色，让图片显示出来 */
+  background-color: transparent; 
+  border-color: rgba(255, 255, 255, 0.5); /* 边框稍微亮一点点 */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transform: translateY(-3px);
+}
+
+/* ✅ 新增：激活状态下显示遮罩层 */
+.sound-card.active::before {
+  opacity: 1;
+}
+
+.card-header { display: flex; justify-content: space-between; align-items: center; }
+
+.sound-info { display: flex; align-items: center; gap: 1.2rem; }
+.sound-info .icon { font-size: 1.8rem; color: rgba(255, 255, 255, 0.8); }
+.sound-info h4 { margin: 0; font-weight: 400; font-size: 1.15rem; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* 增加文字阴影提高可读性 */ }
+
+/* 播放按钮 */
+.play-toggle {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s; font-size: 1.1rem;
+  backdrop-filter: blur(5px); /* 增加毛玻璃效果 */
+}
+.play-toggle:hover { background: rgba(255, 255, 255, 0.25); transform: scale(1.05); }
+.sound-card.active .play-toggle { background: white; color: black; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+
+/* 微调播放图标不居中的问题 */
+.play-icon-offset { margin-left: 3px; }
+
+/* 滑块样式 */
+.range-slider { appearance: none; -webkit-appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
 .range-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  background: white;
-  border-radius: 50%;
+  appearance: none; -webkit-appearance: none;
+  width: 16px; height: 16px; background: white; border-radius: 50%; cursor: pointer;
+  margin-top: -6px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s;
+}
+.range-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.range-slider::-webkit-slider-runnable-track { height: 4px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
+
+/* =========================================
+   6. 底部控制面板
+   ========================================= */
+.global-control-panel {
+  position: fixed; bottom: 0; left: 0; width: 100%; height: 100px;
+  background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+  border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; z-index: 9999;
 }
 
+.panel-inner { width: 100%; max-width: 1400px; display: flex; justify-content: space-between; align-items: center; padding: 0 4vw; }
+
+.master-play { display: flex; align-items: center; gap: 2rem; }
+.btn-master-play {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: white; border: none; color: black;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 5px 20px rgba(255,255,255,0.15);
+}
+.btn-master-play:hover { transform: scale(1.08); box-shadow: 0 8px 25px rgba(255,255,255,0.25); }
+
+.status-label { display: flex; flex-direction: column; gap: 4px; }
+.status-label .label { font-size: 0.65rem; color: var(--text-dim); letter-spacing: 3px; text-transform: uppercase; font-weight: 600; }
+.status-label .value { font-size: 1.1rem; color: white; font-weight: 400; letter-spacing: 1px; }
+
+/* 计时器区域 */
+.timer-section { display: flex; align-items: center; gap: 1.2rem; border-left: 1px solid var(--border); padding-left: 3rem; }
+.timer-icon { font-size: 1.3rem; color: var(--text-dim); }
+
+.timer-section select {
+  background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px; padding: 8px 16px; font-size: 0.95rem; cursor: pointer; transition: 0.3s; outline: none;
+}
+.timer-section select:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
+.timer-section select option { background: #1a1a1a; color: white; }
+
+.btn-timer-toggle {
+  background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: white;
+  padding: 8px 18px; border-radius: 8px; cursor: pointer; letter-spacing: 1px; font-size: 0.85rem; transition: 0.3s;
+}
+.btn-timer-toggle:hover { border-color: white; background: rgba(255, 255, 255, 0.1); }
+.btn-timer-toggle.active { background: white; color: black; border-color: white; font-weight: 600; }
+
+.master-volume { display: flex; align-items: center; gap: 1rem; min-width: 180px; color: var(--text-dim); font-size: 1.2rem; }
+
+/* =========================================
+   7. 弹窗 (Modal)
+   ========================================= */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(15px); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease;
 }
 
-/* --- 7. 响应式优化 --- */
+.modal-content {
+  background: rgba(15, 15, 15, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); padding: 3rem; width: 400px;
+  border-radius: 24px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 2rem;
+}
+
+.modal-content h2 { margin: 0; font-weight: 300; text-align: center; color: white; letter-spacing: 3px; font-size: 1.6rem; }
+
+.modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255, 255, 255, 0.3); cursor: pointer; transition: 0.3s; }
+.modal-close:hover { color: white; transform: rotate(90deg); }
+
+.auth-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.input-group { display: flex; flex-direction: column; gap: 0.8rem; }
+.input-group label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.5); letter-spacing: 1px; text-transform: uppercase; }
+.input-group input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 12px; color: white; font-size: 1rem; transition: all 0.3s; }
+.input-group input:focus { border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05); }
+
+.btn-auth-submit { background: white; color: black; border: none; padding: 16px; border-radius: 12px; font-weight: 600; letter-spacing: 1px; font-size: 1rem; cursor: pointer; margin-top: 0.5rem; transition: 0.3s; }
+.btn-auth-submit:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,255,255,0.2); }
+
+.auth-switch { text-align: center; font-size: 0.9rem; color: rgba(255, 255, 255, 0.4); }
+.auth-switch span { color: white; cursor: pointer; font-weight: 500; margin-left: 8px; transition: 0.2s; }
+.auth-switch span:hover { text-decoration: underline; color: #ccc; }
+
+.error-msg { background: rgba(255, 59, 48, 0.1); color: #ff3b30; padding: 12px; border-radius: 8px; font-size: 0.9rem; text-align: center; border: 1px solid rgba(255, 59, 48, 0.2); }
+
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* 响应式调整 */
+@media (max-width: 900px) {
+  .sounds-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .timer-section { border-left: none; padding-left: 0; }
+}
 @media (max-width: 768px) {
-  .main-content { padding: 2rem; }
-  .navbar { padding: 0 1.5rem; }
-  
-  /* 窗口变小时，底部面板改为垂直排布，防止挤压 */
-  .global-control-panel {
-    height: auto;
-    padding: 1.5rem 0;
-  }
-  .panel-inner {
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  
-  /* 增加页面底部的间距以适应变高的面板 */
-  .page-wrapper { padding-bottom: 200px; }
+  .main-content { padding: 2rem 5vw; }
+  .panel-inner { flex-direction: column; gap: 1.5rem; padding: 20px; }
+  .global-control-panel { height: auto; padding-bottom: 20px; }
+  .status-label, .master-volume { display: none; } /* 移动端隐藏次要信息以保证主按钮空间 */
+  .hero-header h1 { font-size: 2.2rem; }
 }
