@@ -2,7 +2,7 @@
   "name": "custom-background-sound",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ZiqiZhu-Lan.github.io/Custom-BGS",
+  "homepage": "https://ZiqiZhu-Lan.github.io/CBS",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
