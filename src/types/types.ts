@@ -35,6 +35,7 @@ export interface AppState {
   login:            (u: string, p?: string) => boolean;
   register:         (u: string, p?: string) => boolean;
   logout:           () => void;
+  deleteAccount:    () => void;
   toggleLoginModal: (isOpen?: boolean) => void;
 
   // ── Internal ───────────────────────────────────────────────────────────────
