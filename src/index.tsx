@@ -1,32 +1,22 @@
 // 文件路径: src/index.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
 
-// 如果你想测量应用的性能，可以保留这个
-reportWebVitals();
-
-// 👇 核心：激活我们在 public/sw.js 里写的离线拦截器
-if ('serviceWorker' in navigator) {
+// 离线功能：仅在生产构建中注册 Service Worker
+// 开发环境下 CRA dev server 不正确地提供 sw.js，跳过注册
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(
-      (registration) => {
-        console.log('离线音频引擎已激活，范围:', registration.scope);
-      },
-      (err) => {
-        console.log('离线引擎激活失败:', err);
-      }
-    );
+    navigator.serviceWorker.register('/sw.js');
   });
 }

@@ -143,7 +143,8 @@ const SoundCard = React.memo(({ s, i, isDim, hovered, setHovered, toggleSound, u
   const bgImageUrl   = bgMap[s.id];
 
   return (
-    <motion.div style={{ marginTop: i % 2 ? '120px' : 0 }} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.15 }}>
+    <div style={{ marginTop: i % 2 ? '120px' : 0 }}>
+    <motion.div initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.15 }}>
       <motion.div variants={{ hidden: { opacity: 0, y: 100 }, show: { opacity: 1, y: 0, transition: sharedTrans(i * 0.1, 1.2) } }}>
         <motion.div
           className={`sound-editorial-card ${s.isPlaying ? 'is-playing' : ''}`}
@@ -154,7 +155,7 @@ const SoundCard = React.memo(({ s, i, isDim, hovered, setHovered, toggleSound, u
           <div className="card-bg-container">
             <motion.div
               className="card-bg-image"
-              style={{ backgroundImage: `url(${bgImageUrl})` }}
+              style={{ backgroundImage: `url(${bgImageUrl})` } as any}
               animate={{ scale: s.isPlaying ? 1.05 : 1, filter: s.isPlaying ? 'grayscale(0%)' : 'grayscale(100%) brightness(0.4)' }}
               transition={{ duration: 2 }}
             />
@@ -203,6 +204,7 @@ const SoundCard = React.memo(({ s, i, isDim, hovered, setHovered, toggleSound, u
         </motion.div>
       </motion.div>
     </motion.div>
+    </div>
   );
 });
 
@@ -262,8 +264,8 @@ export default function App() {
       </motion.nav>
 
       <main className="main-content">
-        <motion.section className="hero-section" style={{ y: heroY, opacity: heroOp, scale: heroSc }}>
-          {['MOLD YOUR', 'ATMOSPHERE'].map((txt, i) => (
+        <motion.section className="hero-section" style={{ y: heroY, opacity: heroOp, scale: heroSc } as any}>
+          {['MOLD YOUR', 'ATMOSPHERE.'].map((txt, i) => (
             <div key={i} className="hero-text-mask">
               <motion.h1 variants={txtVar} initial="hidden" animate="show" transition={{ delay: i * 0.1 }}>{txt}</motion.h1>
             </div>
@@ -276,7 +278,7 @@ export default function App() {
               <button key={p} onClick={() => store.applyPreset(p)} className="preset-btn">{p.toUpperCase()}</button>
             ))}
           </motion.div>
-          <motion.div className="scroll-indicator" style={{ opacity: arrowOp }} animate={{ y: [0, 15, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
+          <motion.div className="scroll-indicator" style={{ opacity: arrowOp } as any} animate={{ y: [0, 15, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
             <FiChevronDown size={32} />
           </motion.div>
         </motion.section>
