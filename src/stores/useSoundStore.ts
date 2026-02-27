@@ -31,6 +31,7 @@ export interface AppState {
   login:               (u: string, p?: string) => boolean;
   register:            (u: string, p?: string) => boolean;
   logout:              () => void;
+  deleteAccount:       () => void; // ✅ 新增：注销账户接口
   toggleLoginModal:    (isOpen?: boolean) => void;
   applyPreset:         (type: PresetType) => void;
   rehydrateAudio:      () => void;
@@ -220,6 +221,17 @@ export const useSoundStore = create<AppState>((set, get) => ({
     stopAll();
     localStorage.removeItem(SK_CURR);
     set({ user: null, isLoggedIn: false, sounds: freshSounds(), globalVolume: 80, isGlobalPlaying: false, timerDuration: 15, isTimerActive: false, lastActiveIds: [] });
+  },
+
+  // ✅ 新增：注销并彻底删除账户数据
+  deleteAccount: () => {
+    const { user, logout } = get();
+    if (!user) return;
+    const users: User[] = safeParse(SK_USERS, []);
+    // 从用户库中过滤掉当前用户
+    const updatedUsers = users.filter(u => u.username !== user.username);
+    localStorage.setItem(SK_USERS, JSON.stringify(updatedUsers));
+    logout(); // 抹除后直接执行登出逻辑（清空当前状态并停播音频）
   },
 
   toggleLoginModal: (open) => set(s => ({ isLoginModalOpen: open ?? !s.isLoginModalOpen })),

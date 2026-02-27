@@ -1,3 +1,4 @@
+/* 文件路径: src/App.css */
 :root{--bg-dark:#050505;--accent:#fff;--text-dim:rgba(255,255,255,.4)}
 *{box-sizing:border-box;outline:0;cursor:none}
 html,body{margin:0;padding:0;width:100%;min-height:100%;background:var(--bg-dark);color:#fff;font-family:'Helvetica Neue',-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -83,4 +84,9 @@ html,body{margin:0;padding:0;width:100%;min-height:100%;background:var(--bg-dark
 .auth-switch{text-align:center;font-size:.8rem;color:var(--text-dim)}
 .auth-switch span{color:#fff;text-decoration:underline;margin-left:8px}
 .error-msg{background:rgba(255,59,48,.1);color:#ff3b30;padding:12px;border-radius:8px;font-size:.9rem;text-align:center;border:1px solid rgba(255,59,48,.2)}
-@media (max-width:900px){.sounds-gallery{grid-template-columns:1fr;gap:10vw}.sound-editorial-card{margin-top:0!important}.hidden-mobile,.custom-cursor{display:none}.dynamic-pill{padding:12px 20px}}
+
+/* 响应式调整 */
+@media (max-width:900px){.sounds-gallery{grid-template-columns:1fr;gap:10vw}.sound-editorial-card{margin-top:0!important}.hidden-mobile{display:none}.dynamic-pill{padding:12px 20px}}
+
+/* 光标终极修复：只在真正的触屏设备上隐藏自定义光标并恢复系统原生光标 */
+@media (hover: none) and (pointer: coarse) { .custom-cursor { display: none !important; } * { cursor: auto !important; } }

@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import './App.css';
 import { useSoundStore, PresetType } from './stores/useSoundStore';
-import { FiPlay, FiPause, FiVolume2, FiClock, FiX, FiUser, FiLogOut, FiChevronDown } from 'react-icons/fi';
+import { FiPlay, FiPause, FiVolume2, FiClock, FiX, FiUser, FiLogOut, FiChevronDown, FiUserX } from 'react-icons/fi';
 import { TbTrees, TbWaveSine, TbWind, TbFlame } from 'react-icons/tb';
 import { GiDove } from 'react-icons/gi';
 import { motion, AnimatePresence, useScroll, useTransform, Variants, useSpring, useMotionValue } from 'framer-motion';
@@ -63,6 +63,7 @@ const CustomCursor = () => {
 
 // ─── StatusMonitor ────────────────────────────────────────────────────────────
 
+// 📊 南孚工业级精密 HUD
 const StatusMonitor = () => {
   const { sounds, isGlobalPlaying } = useSoundStore();
   const active    = sounds.filter(s => s.isPlaying);
@@ -70,33 +71,97 @@ const StatusMonitor = () => {
   const avgVolume   = activeCount > 0 ? Math.round(active.reduce((sum, s) => sum + s.volume, 0) / activeCount) : 0;
 
   const pill: React.CSSProperties = {
-    display: 'flex', gap: '1.5rem', alignItems: 'center',
-    background: 'rgba(20,20,20,0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255,255,255,0.05)', padding: '6px 20px', borderRadius: '100px',
+    display: 'flex', gap: '1.2rem', alignItems: 'center',
+    background: 'rgba(255,255,255,0.03)', 
+    border: '1px solid rgba(255,255,255,0.05)', 
+    padding: '6px 18px', borderRadius: '100px',
+    position: 'relative', 
   };
-  const divider: React.CSSProperties = { width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)' };
-  const label = (txt: string) => ({ fontSize: '0.5rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.4)', fontWeight: 700 } as React.CSSProperties);
-  const val   = (active: boolean) => ({ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '1px', fontVariantNumeric: 'tabular-nums', color: active ? '#fff' : 'rgba(255,255,255,0.4)' } as React.CSSProperties);
+  const label = { fontSize: '0.6rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', fontWeight: 600 } as React.CSSProperties;
+  const val   = (isActive: boolean) => ({ fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.5px', fontVariantNumeric: 'tabular-nums', color: isActive ? '#fff' : 'rgba(255,255,255,0.5)' } as React.CSSProperties);
 
   return (
     <div className="hidden-mobile" style={pill}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={label('ESTADO')}>ESTADO</span>
+      <div style={{ position: 'absolute', top: '-1px', left: '-5px', width: '10px', height: '10px', borderTop: '2px solid rgba(255,255,255,0.4)', borderLeft: '2px solid rgba(255,255,255,0.4)' }} />
+      <div style={{ position: 'absolute', bottom: '-1px', right: '-5px', width: '10px', height: '10px', borderBottom: '2px solid rgba(255,255,255,0.4)', borderRight: '2px solid rgba(255,255,255,0.4)' }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={label}>ESTADO</span>
         <span style={val(isGlobalPlaying)}>{isGlobalPlaying ? 'ACTIVO' : 'ESPERA'}</span>
       </div>
-      <div style={divider} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={label('PISTAS')}>PISTAS</span>
-        <span style={val(activeCount > 0)}>{activeCount} / {sounds.length}</span>
+      
+      <div style={{ width: '2px', height: '14px', background: 'rgba(255,255,255,0.1)', transform: 'rotate(20deg)' }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={label}>PISTAS</span>
+        <span style={val(activeCount > 0)}><span style={{fontSize:'1rem',fontWeight:300,fontFamily:'monospace'}}>0{activeCount}</span>/<span style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.2)',fontFamily:'monospace'}}>0{sounds.length}</span></span>
       </div>
-      <div style={divider} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={label('VOLUMEN')}>VOLUMEN</span>
-        <span style={val(activeCount > 0)}>{avgVolume}%</span>
+
+      <div style={{ width: '2px', height: '14px', background: 'rgba(255,255,255,0.1)', transform: 'rotate(20deg)' }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={label}>VOLUMEN</span>
+        <span style={val(activeCount > 0)}><span style={{fontSize:'1rem',fontWeight:300,fontFamily:'monospace'}}>0{avgVolume.toString().padStart(2, '0')}</span><span style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.2)',fontFamily:'monospace'}}>%</span></span>
       </div>
     </div>
   );
 };
+
+// ─── Custom Confirm Delete Modal ──────────────────────────────────────────────
+
+// ⚠️ 专属高级注销确认弹窗 (替代丑陋的 window.confirm)
+const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm }: { isOpen: boolean, onClose: () => void, onConfirm: () => void }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div className="modal-overlay" onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ zIndex: 200000 }}>
+          <motion.div 
+            className="modal-content" 
+            onClick={e => e.stopPropagation()} 
+            initial={{ scale: 0.9, opacity: 0, y: 30 }} 
+            animate={{ scale: 1, opacity: 1, y: 0 }} 
+            exit={{ scale: 0.9, opacity: 0, y: 30 }} 
+            transition={sharedTrans(0, 0.4)}
+            style={{ 
+              padding: '3.5rem', 
+              border: '1px solid rgba(255, 59, 48, 0.3)', 
+              boxShadow: '0 20px 60px rgba(255, 59, 48, 0.15)',
+              position: 'relative' 
+            }}
+          >
+            {/* HUD 红色警告准星边框 */}
+            <div style={{ position: 'absolute', top: '-1px', left: '-1px', width: '20px', height: '20px', borderTop: '2px solid #ff3b30', borderLeft: '2px solid #ff3b30' }} />
+            <div style={{ position: 'absolute', bottom: '-1px', right: '-1px', width: '20px', height: '20px', borderBottom: '2px solid #ff3b30', borderRight: '2px solid #ff3b30' }} />
+
+            <h2 style={{ color: '#ff3b30', margin: '0 0 1rem 0', letterSpacing: '6px', fontSize: '1.2rem' }}>ZONA DE PELIGRO</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', lineHeight: 1.6, textAlign: 'center', margin: '0 0 2.5rem 0', letterSpacing: '1px' }}>
+              ¿Estás seguro de que deseas eliminar tu cuenta permanentemente?
+              <span style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px', textTransform: 'uppercase' }}>This action cannot be undone.</span>
+            </p>
+            
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <button 
+                className="btn-auth-submit" 
+                style={{ flex: 1, margin: 0, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }} 
+                onClick={onClose}
+              >
+                CANCELAR
+              </button>
+              <button 
+                className="btn-auth-submit" 
+                style={{ flex: 1, margin: 0, background: '#ff3b30', color: '#fff', boxShadow: '0 0 20px rgba(255,59,48,0.4)' }} 
+                onClick={onConfirm}
+              >
+                ELIMINAR
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 
 // ─── LoginModal ───────────────────────────────────────────────────────────────
 
@@ -215,8 +280,10 @@ export default function App() {
   const { scrollYProgress } = useScroll();
   const smoothScroll = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
   const [hovered,     setHovered]     = useState<number | null>(null);
-  // timerPreset is purely UI state — tracks the select value independently from the countdown
   const [timerPreset, setTimerPreset] = useState(0);
+  
+  // ✅ 新增：控制注销确认弹窗的显示状态
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const heroY  = useTransform(smoothScroll, [0, 0.4], [0, -250]);
   const heroOp = useTransform(smoothScroll, [0, 0.3], [1, 0]);
@@ -247,6 +314,16 @@ export default function App() {
     <div className="page-wrapper">
       <CustomCursor />
       <LoginModal />
+      
+      {/* ✅ 挂载注销弹窗 */}
+      <ConfirmDeleteModal 
+        isOpen={showDeleteConfirm} 
+        onClose={() => setShowDeleteConfirm(false)} 
+        onConfirm={() => {
+          store.deleteAccount();
+          setShowDeleteConfirm(false);
+        }} 
+      />
 
       <motion.nav className="navbar" initial={{ y: -100 }} animate={{ y: 0 }} transition={sharedTrans()}>
         <span className="logo">SILENCE <span style={{ opacity: 0.3 }}>/ 01</span></span>
@@ -256,16 +333,33 @@ export default function App() {
         </div>
 
         <div className="nav-right">
-          {store.isLoggedIn
-            ? <div className="user-profile"><span><FiUser /> {store.user?.username}</span><button onClick={store.logout} className="btn-icon"><FiLogOut /></button></div>
-            : <button onClick={() => store.toggleLoginModal(true)} className="btn-login">LOGIN</button>
-          }
+          {store.isLoggedIn ? (
+            <div className="user-profile">
+              <span><FiUser /> {store.user?.username}</span>
+              <button onClick={store.logout} className="btn-icon" title="Cerrar sesión (Logout)">
+                <FiLogOut />
+              </button>
+              {/* 触发高级注销弹窗 */}
+              <button 
+                onClick={() => setShowDeleteConfirm(true)} 
+                className="btn-icon" 
+                title="Eliminar cuenta (Delete Account)"
+                style={{ color: 'rgba(255, 59, 48, 0.6)', transition: 'color 0.3s' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#ff3b30')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255, 59, 48, 0.6)')}
+              >
+                <FiUserX />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => store.toggleLoginModal(true)} className="btn-login">LOGIN</button>
+          )}
         </div>
       </motion.nav>
 
       <main className="main-content">
         <motion.section className="hero-section" style={{ y: heroY, opacity: heroOp, scale: heroSc } as any}>
-          {['MOLD YOUR', 'ATMOSPHERE.'].map((txt, i) => (
+          {['MOLD YOUR', 'ATMOSPHERE'].map((txt, i) => (
             <div key={i} className="hero-text-mask">
               <motion.h1 variants={txtVar} initial="hidden" animate="show" transition={{ delay: i * 0.1 }}>{txt}</motion.h1>
             </div>
@@ -304,9 +398,57 @@ export default function App() {
                 {store.isGlobalPlaying ? <FiPause size={18} /> : <FiPlay size={18} className="play-offset" />}
               </button>
             </div>
-            <div className="pill-status">
-              <span className="pill-label">{store.isGlobalPlaying || store.isTimerActive ? 'ACTIVE' : 'STANDBY'}</span>
-              <span className="pill-time">{store.isTimerActive ? fmtTime(store.timerDuration) : '∞'}</span>
+            
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                minWidth: '85px',
+                position: 'relative', 
+                height: '44px'
+              }}
+              className="pill-status"
+            >
+              {store.isTimerActive && (
+                <>
+                  <div style={{ position: 'absolute', top: '0px', left: '-5px', width: '6px', height: '6px', borderTop: '1px solid rgba(255,255,255,0.4)', borderLeft: '1px solid rgba(255,255,255,0.4)' }} />
+                  <div style={{ position: 'absolute', bottom: '0px', right: '-5px', width: '6px', height: '6px', borderBottom: '1px solid rgba(255,255,255,0.4)', borderRight: '1px solid rgba(255,255,255,0.4)' }} />
+                </>
+              )}
+
+              <span
+                style={{
+                  fontSize: '0.6rem',
+                  letterSpacing: '2px',
+                  color: 'var(--text-dim)',
+                  textTransform: 'uppercase',
+                  lineHeight: 1,
+                  textAlign: 'center',
+                  marginTop: store.isTimerActive ? '0' : '0', 
+                  transition: 'all 0.3s ease'
+                }}
+                className="pill-label"
+              >
+                {store.isGlobalPlaying || store.isTimerActive ? 'ACTIVE' : 'STANDBY'}
+              </span>
+
+              {store.isTimerActive && (
+                <span
+                  style={{
+                    fontSize: '1rem', 
+                    fontWeight: 600,
+                    fontVariantNumeric: 'tabular-nums',
+                    lineHeight: 1,
+                    marginTop: '6px',
+                    color: '#fff',
+                    textAlign: 'center'
+                  }}
+                  className="pill-time"
+                >
+                  {fmtTime(store.timerDuration)}
+                </span>
+              )}
             </div>
           </div>
 

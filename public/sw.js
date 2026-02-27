@@ -1,11 +1,10 @@
-// public/sw.js
+// 文件路径: public/sw.js
 // CBS — Service Worker
 // 策略：App Shell + 音频/图片资产全部 Cache First，确保离线可用
 
 const CACHE_NAME = 'cbs-v1';
 
 // ── 安装：预缓存 App Shell ────────────────────────────────────────────────────
-// CRA 构建后 HTML 入口始终为 /index.html，JS/CSS 由 fetch 拦截动态缓存
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
