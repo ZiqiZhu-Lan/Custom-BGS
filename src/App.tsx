@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useState, useCallback } from 'react';
+﻿// 文件路径: src/App.tsx
+import React, { useEffect, useState, useCallback } from 'react';
 import './App.css';
 import { useSoundStore } from './stores/useSoundStore';
 import type { Sound, PresetType, Lang } from './stores/useSoundStore';
@@ -211,7 +212,8 @@ const SoundCard = React.memo(({ s, i, isDim, hovered, setHovered, toggleSound, u
 
   return (
     <div style={{ marginTop: i % 2 ? 120 : 0 }}>
-      <motion.div initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.15 }}>
+      {/* 性能优化：将 once: false 改为 once: true，防止重复滚动重绘卡顿 */}
+      <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.15 }}>
         <motion.div variants={{ hidden: { opacity: 0, y: 100 }, show: { opacity: 1, y: 0, transition: trans(i * 0.1, 1.2) } }}>
           <motion.div
             className={`sound-editorial-card ${s.isPlaying ? 'is-playing' : ''}`}
@@ -293,7 +295,6 @@ export default function App() {
   const heroSc  = useTransform(smooth, [0, 0.4], [1, 0.9]);
   const arrowOp = useTransform(smooth, [0, 0.05], [1, 0]);
 
-  /* URL mix restore on mount */
   useEffect(() => {
     if (window.location.search) {
       store.applyUrlMix(window.location.search);
@@ -302,7 +303,6 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Timer tick */
   useEffect(() => {
     const t = store.isTimerActive && store.timerDuration > 0 ? setInterval(store.tick, 1000) : null;
     return () => { if (t) clearInterval(t); };
@@ -332,7 +332,6 @@ export default function App() {
       <LoginModal />
       <ConfirmDeleteModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={() => { store.deleteAccount(); setShowDeleteConfirm(false); }} />
 
-      {/* Toast */}
       <AnimatePresence>
         {toastMsg && (
           <motion.div {...fadeUp()} exit={{ opacity: 0, y: 20 }} className="toast-msg" role="status" aria-live="polite">
@@ -341,7 +340,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Navbar */}
       <motion.nav className="navbar" initial={{ y: -100 }} animate={{ y: 0 }} transition={trans()} aria-label="Main Navigation">
         <span className="logo" aria-hidden="true">SILENCE <span className="logo-sub">/ 01</span></span>
         <div className="nav-center"><StatusMonitor /></div>
@@ -369,9 +367,7 @@ export default function App() {
         </div>
       </motion.nav>
 
-      {/* Main */}
       <main className="main-content" role="main">
-        {/* Hero */}
         <motion.section className="hero-section" style={{ y: heroY, opacity: heroOp, scale: heroSc } as any} aria-labelledby="hero-heading">
           <div aria-hidden="true">
             {[d.hero1, d.hero2].map((txt, i) => (
@@ -394,7 +390,6 @@ export default function App() {
           </motion.div>
         </motion.section>
 
-        {/* Sound Gallery */}
         <div className="sounds-gallery" aria-label="Sound Mixers">
           {store.sounds.map((s, i) => (
             <SoundCard key={s.id} s={s} i={i} isDim={hovered !== null && hovered !== s.id} hovered={hovered} setHovered={setHovered} toggleSound={store.toggleSound} updateSoundVolume={store.updateSoundVolume} lang={store.lang} />
@@ -402,7 +397,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* Dynamic Island */}
       <motion.div className="dynamic-island-wrapper" initial={{ y: 150, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={trans(0.8)}>
         <div className="dynamic-pill" role="region" aria-label="Global Controls">
           <div className="pill-left">
